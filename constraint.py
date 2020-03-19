@@ -213,6 +213,20 @@ class Problem(object):
                 msg = "Constraints must be instances of subclasses " "of the Constraint class"
                 raise ValueError(msg)
         self._constraints.append((constraint, variables))
+        
+    def isSolution(self, assignments):
+        domains, constraints, vconstraints = self._getArgs()
+        
+        if len(assignments)!=len(self._variables):
+            return False
+        
+        for variable, value in assignments.items():
+            for constraint, variables in vconstraints[variable]:
+                if not constraint(variables, domains, assignments):
+                    # Value is not good.
+                    return False
+        return True
+        
 
     def getSolution(self):
         """
@@ -459,6 +473,7 @@ class NMCSSolver(Solver):
                              (default is true)
         @type  forwardcheck: bool
         """
+        self.name='nmcs-{}'.format(level)
         self._forwardcheck = forwardcheck
         self.level = level
         self.heuristics = heuristics
@@ -679,6 +694,7 @@ class BacktrackingSolver(Solver):
                              (default is true)
         @type  forwardcheck: bool
         """
+        self.name='backtracking'
         self._forwardcheck = forwardcheck
 
     def getSolutionIter(self, domains, constraints, vconstraints):
@@ -807,6 +823,7 @@ class RecursiveBacktrackingSolver(Solver):
                              (default is true)
         @type  forwardcheck: bool
         """
+        self.name='recursive_backtracking'
         self._forwardcheck = forwardcheck
 
     def recursiveBacktracking(
@@ -902,6 +919,7 @@ class MinConflictsSolver(Solver):
                       when looking for a solution (default is 1000)
         @type  steps: int
         """
+        self.name='min_conflicts'
         self._steps = steps
 
     def getSolution(self, domains, constraints, vconstraints):

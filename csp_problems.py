@@ -8,10 +8,43 @@ Created on Mon Mar 16 11:41:45 2020
 import sudoku
 import constraint
 
+import time
+from threading import Thread, Event
+from multiprocessing import Process, Queue
 import copy
 import string
 import itertools
+import functools
 
+class TimeoutException(Exception):
+    def __init__(self, *args, **kwargs):
+        Exception.__init__(self, *args, **kwargs)
+   
+def solve_with_timeout(problem, solver=constraint.BacktrackingSolver(), logfile=None, timeout_sec=300):
+    def solve():
+        finished = True
+        queue = Queue()
+        proc = Process(target=solve2, args=(problem, solver, logfile, queue,))
+        proc.start()
+        try:
+            problem2 = queue.get(timeout=timeout_sec)
+        except:
+            proc.terminate()
+            problem2 = copy.deepcopy(problem)
+            finished = False
+        finally:
+            return problem2, finished
+            
+    return solve
+  
+def solve2(problem, solver=constraint.BacktrackingSolver(), logfile=None, queue=None):
+    p = problem.create_csp_problem(solver, logfile)
+    fixed = p.getSolution()
+    problem2 = copy.deepcopy(problem)
+    problem2.fixed = fixed
+    queue.put(problem2)
+    
+    
 def solve(problem, solver=constraint.BacktrackingSolver(), logfile=None):
     p = problem.create_csp_problem(solver, logfile)
     fixed = p.getSolution()
@@ -22,13 +55,13 @@ def solve(problem, solver=constraint.BacktrackingSolver(), logfile=None):
 class Problems:
     def __init__(self, fixed):
         self.fixed = fixed
-        
-    def solve(self, solver, logfile=None):
-        p = self.create_csp_problem(solver, logfile)
-        return p.getSolution()
     
-    def create_csp_problem(self, solver, logfile=None):
+    def create_csp_problem(self, solver=constraint.BacktrackingSolver(), logfile=None):
         pass
+    
+    def is_solved(self):
+        p = self.create_csp_problem(solver=constraint.BacktrackingSolver(), logfile=None)
+        return p.isSolution(self.fixed)
     
     
 class Sudoku_problem(Problems):
@@ -92,11 +125,6 @@ class NQueens(Problems):
         self.add_diag_left_constraints(p)
         self.add_diag_right_constraints(p)
         return p
-    
-    def solve(self, solver, logfile=None):
-        p = self.create_csp_problem(solver, logfile)
-        fixed = p.getSolution()
-        return self.__init__(self.size, fixed)
     
     def dict_to_string(self, padding = 0, rowend = "", row_sep = "", box_sep = "", col_sep = "", last_row_hack = ""):
         """Returns a puzzle string of dimension 'boxsize' from a dictionary of 
@@ -230,11 +258,6 @@ class NQueens_2(Problems):
         self.add_diag_right_constraints(p)
         return p
     
-    def solve(self, solver, logfile=None):
-        p = self.create_csp_problem(solver, logfile)
-        fixed = p.getSolution()
-        return self.__init__(self.size, fixed)
-    
     def dict_to_string(self, padding = 0, rowend = "", row_sep = "", box_sep = "", col_sep = "", last_row_hack = ""):
         """Returns a puzzle string of dimension 'boxsize' from a dictionary of 
         'fixed' cells."""
@@ -297,3 +320,43 @@ class NQueens_2(Problems):
     def n_diags_right(self): return 2*self.size
     def n_cells(self): return self.n_rows()*self.n_cols()
     def n_symbols(self): return 2
+    
+    
+class Graph_coloring(Problems):
+        def __init__(self, edges, nb_colors, fixed={}):
+            self.fixed = fixed
+            self.edges = edges
+            self.node_count = functools.reduce(max, map(max, edges))+1
+            self.nb_colors = nb_colors
+            
+        def __repr__(self):
+            solved = 'solved'
+            if len(self.fixed) != self.node_count:
+                solved = 'not solved'
+            return solved + ' ' + str(self.fixed)
+    
+        def __str__(self):
+            return self.__repr__()
+    
+        def get_fixed(self):
+            return self.fixed
+        
+        def create_csp_problem(self, solver=constraint.BacktrackingSolver(), logfile=None):
+            p = constraint.Problem(solver)
+            p.addVariables(self.nodes(), self.colors()) 
+            
+            self.add_edge_constraint(p)
+            return p
+        
+        def add_edge_constraint(self, problem):
+            for i,j in self.edges:
+                problem.addConstraint(constraint.AllDifferentConstraint(), [i,j])
+        
+        def nodes(self):
+            return range(0, self.node_count)
+        
+        def edges(self):
+            return self.edges
+        
+        def colors(self):
+            return range(self.nb_colors)

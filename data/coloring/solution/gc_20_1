@@ -1,0 +1,142 @@
+node : 20, edge : 23
+neighbor for each node:
+16
+2 6 7 8
+1 11 16 17
+14 16 17
+7 13 17
+6 11
+1 5 18
+1 4
+1
+12
+13
+2 5 17
+9
+4 10 15
+3
+13 17
+0 2 3 19
+2 3 4 11 15
+6
+16
+
+20 color is feasible, tried 2 step
+19 color is feasible, tried 0 step
+18 color is feasible, tried 1 step
+17 color is feasible, tried 0 step
+16 color is feasible, tried 0 step
+15 color is feasible, tried 0 step
+14 color is feasible, tried 2 step
+13 color is feasible, tried 0 step
+12 color is feasible, tried 1 step
+11 color is feasible, tried 1 step
+10 color is feasible, tried 0 step
+9 color is feasible, tried 0 step
+8 color is feasible, tried 1 step
+7 color is feasible, tried 1 step
+6 color is feasible, tried 1 step
+5 color is feasible, tried 1 step
+4 color is feasible, tried 1 step
+3 color is feasible, tried 5 step
+[Color    2][Retry     1] reinitializing color
+[Color    2][Retry     2] reinitializing color
+[Color    2][Retry     3] reinitializing color
+[Color    2][Retry     4] reinitializing color
+[Color    2][Retry     5] reinitializing color
+[Color    2][Retry     6] reinitializing color
+[Color    2][Retry     7] reinitializing color
+[Color    2][Retry     8] reinitializing color
+[Color    2][Retry     9] reinitializing color
+[Color    2][Retry    10] reinitializing color
+[Color    2][Retry    11] reinitializing color
+[Color    2][Retry    12] reinitializing color
+[Color    2][Retry    13] reinitializing color
+[Color    2][Retry    14] reinitializing color
+[Color    2][Retry    15] reinitializing color
+[Color    2][Retry    16] reinitializing color
+[Color    2][Retry    17] reinitializing color
+[Color    2][Retry    18] reinitializing color
+[Color    2][Retry    19] reinitializing color
+[Color    2][Retry    20] reinitializing color
+[Color    2][Retry    21] reinitializing color
+[Color    2][Retry    22] reinitializing color
+[Color    2][Retry    23] reinitializing color
+[Color    2][Retry    24] reinitializing color
+[Color    2][Retry    25] reinitializing color
+[Color    2][Retry    26] reinitializing color
+[Color    2][Retry    27] reinitializing color
+[Color    2][Retry    28] reinitializing color
+[Color    2][Retry    29] reinitializing color
+[Color    2][Retry    30] reinitializing color
+[Color    2][Retry    31] reinitializing color
+[Color    2][Retry    32] reinitializing color
+[Color    2][Retry    33] reinitializing color
+[Color    2][Retry    34] reinitializing color
+[Color    2][Retry    35] reinitializing color
+[Color    2][Retry    36] reinitializing color
+[Color    2][Retry    37] reinitializing color
+[Color    2][Retry    38] reinitializing color
+[Color    2][Retry    39] reinitializing color
+[Color    2][Retry    40] reinitializing color
+[Color    2][Retry    41] reinitializing color
+[Color    2][Retry    42] reinitializing color
+[Color    2][Retry    43] reinitializing color
+[Color    2][Retry    44] reinitializing color
+[Color    2][Retry    45] reinitializing color
+[Color    2][Retry    46] reinitializing color
+[Color    2][Retry    47] reinitializing color
+[Color    2][Retry    48] reinitializing color
+[Color    2][Retry    49] reinitializing color
+[Color    2][Retry    50] reinitializing color
+[Color    2][Retry    51] reinitializing color
+[Color    2][Retry    52] reinitializing color
+[Color    2][Retry    53] reinitializing color
+[Color    2][Retry    54] reinitializing color
+[Color    2][Retry    55] reinitializing color
+[Color    2][Retry    56] reinitializing color
+[Color    2][Retry    57] reinitializing color
+[Color    2][Retry    58] reinitializing color
+[Color    2][Retry    59] reinitializing color
+[Color    2][Retry    60] reinitializing color
+[Color    2][Retry    61] reinitializing color
+[Color    2][Retry    62] reinitializing color
+[Color    2][Retry    63] reinitializing color
+[Color    2][Retry    64] reinitializing color
+[Color    2][Retry    65] reinitializing color
+[Color    2][Retry    66] reinitializing color
+[Color    2][Retry    67] reinitializing color
+[Color    2][Retry    68] reinitializing color
+[Color    2][Retry    69] reinitializing color
+[Color    2][Retry    70] reinitializing color
+[Color    2][Retry    71] reinitializing color
+[Color    2][Retry    72] reinitializing color
+[Color    2][Retry    73] reinitializing color
+[Color    2][Retry    74] reinitializing color
+[Color    2][Retry    75] reinitializing color
+[Color    2][Retry    76] reinitializing color
+[Color    2][Retry    77] reinitializing color
+[Color    2][Retry    78] reinitializing color
+[Color    2][Retry    79] reinitializing color
+[Color    2][Retry    80] reinitializing color
+[Color    2][Retry    81] reinitializing color
+[Color    2][Retry    82] reinitializing color
+[Color    2][Retry    83] reinitializing color
+[Color    2][Retry    84] reinitializing color
+[Color    2][Retry    85] reinitializing color
+[Color    2][Retry    86] reinitializing color
+[Color    2][Retry    87] reinitializing color
+[Color    2][Retry    88] reinitializing color
+[Color    2][Retry    89] reinitializing color
+[Color    2][Retry    90] reinitializing color
+[Color    2][Retry    91] reinitializing color
+[Color    2][Retry    92] reinitializing color
+[Color    2][Retry    93] reinitializing color
+[Color    2][Retry    94] reinitializing color
+[Color    2][Retry    95] reinitializing color
+[Color    2][Retry    96] reinitializing color
+[Color    2][Retry    97] reinitializing color
+[Color    2][Retry    98] reinitializing color
+[Color    2][Retry    99] reinitializing color
+3 0
+0 0 1 1 0 1 2 2 2 1 2 0 0 1 0 0 2 2 1 0
