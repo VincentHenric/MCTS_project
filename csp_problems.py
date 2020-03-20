@@ -20,11 +20,11 @@ class TimeoutException(Exception):
     def __init__(self, *args, **kwargs):
         Exception.__init__(self, *args, **kwargs)
    
-def solve_with_timeout(problem, solver=constraint.BacktrackingSolver(), logfile=None, timeout_sec=300):
+def solve_with_timeout(problem, solver=constraint.BacktrackingSolver(), timeout_sec=300):
     def solve():
         finished = True
         queue = Queue()
-        proc = Process(target=solve2, args=(problem, solver, logfile, queue,))
+        proc = Process(target=solve2, args=(problem, solver, queue,))
         proc.start()
         try:
             problem2 = queue.get(timeout=timeout_sec)
@@ -37,16 +37,16 @@ def solve_with_timeout(problem, solver=constraint.BacktrackingSolver(), logfile=
             
     return solve
   
-def solve2(problem, solver=constraint.BacktrackingSolver(), logfile=None, queue=None):
-    p = problem.create_csp_problem(solver, logfile)
+def solve2(problem, solver=constraint.BacktrackingSolver(), queue=None):
+    p = problem.create_csp_problem(solver)
     fixed = p.getSolution()
     problem2 = copy.deepcopy(problem)
     problem2.fixed = fixed
     queue.put(problem2)
     
     
-def solve(problem, solver=constraint.BacktrackingSolver(), logfile=None):
-    p = problem.create_csp_problem(solver, logfile)
+def solve(problem, solver=constraint.BacktrackingSolver()):
+    p = problem.create_csp_problem(solver)
     fixed = p.getSolution()
     problem2 = copy.deepcopy(problem)
     problem2.fixed = fixed
@@ -56,11 +56,11 @@ class Problems:
     def __init__(self, fixed):
         self.fixed = fixed
     
-    def create_csp_problem(self, solver=constraint.BacktrackingSolver(), logfile=None):
+    def create_csp_problem(self, solver=constraint.BacktrackingSolver()):
         pass
     
     def is_solved(self):
-        p = self.create_csp_problem(solver=constraint.BacktrackingSolver(), logfile=None)
+        p = self.create_csp_problem(solver=constraint.BacktrackingSolver())
         return p.isSolution(self.fixed)
     
     
@@ -74,8 +74,8 @@ class Sudoku_problem(Problems):
         else:
             raise NameError('No such format: ' + format)
             
-    def create_csp_problem(self, solver, logfile):
-        return sudoku.puzzle_as_CP(self.fixed, self.boxsize, solver=solver, logfile=logfile)
+    def create_csp_problem(self, solver):
+        return sudoku.puzzle_as_CP(self.fixed, self.boxsize, solver=solver)
 
     def __repr__(self):
         return sudoku.dict_to_string(self.fixed, self.boxsize, padding = 1, rowend = "\n")
@@ -95,10 +95,6 @@ class Sudoku_problem(Problems):
 
     def get_fixed(self):
         return self.fixed
-    
-    @staticmethod
-    def generate(self, n_fixed, boxsize):
-        return self.__init__(sudoku.random_fixed(n_fixed, boxsize, model='CP'), boxsize)
 
 class NQueens(Problems):
     def __init__(self, n, fixed={}):
@@ -117,7 +113,7 @@ class NQueens(Problems):
     def get_fixed(self):
         return self.fixed
     
-    def create_csp_problem(self, solver=constraint.BacktrackingSolver(), logfile=None):
+    def create_csp_problem(self, solver=constraint.BacktrackingSolver()):
         p = constraint.Problem(solver)
         p.addVariables(self.cells(), self.symbols()) 
         self.add_row_constraints(p)
@@ -249,7 +245,7 @@ class NQueens_2(Problems):
     def get_fixed(self):
         return self.fixed
     
-    def create_csp_problem(self, solver=constraint.BacktrackingSolver(), logfile=None):
+    def create_csp_problem(self, solver=constraint.BacktrackingSolver()):
         p = constraint.Problem(solver)
         p.addVariables(self.rows(), self.cols()) 
         
@@ -341,7 +337,7 @@ class Graph_coloring(Problems):
         def get_fixed(self):
             return self.fixed
         
-        def create_csp_problem(self, solver=constraint.BacktrackingSolver(), logfile=None):
+        def create_csp_problem(self, solver=constraint.BacktrackingSolver(),):
             p = constraint.Problem(solver)
             p.addVariables(self.nodes(), self.colors()) 
             

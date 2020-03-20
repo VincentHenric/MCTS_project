@@ -16,6 +16,7 @@ import os
 import time
 #puzzle = sudoku.random_puzzle(27, 3, model = 'CP')
 
+#NO_FILE = [nqueens]
 
 class Experiment:
     def __init__(self, class_of_problems, solver=constraint.BacktrackingSolver()):
@@ -51,8 +52,9 @@ class Experiment:
                 
                 
 if __name__ == '__main__':  
-    if True:
-        exp = Experiment('coloring', solver=constraint.NMCSSolver(level=1))
+    if False:
+        exp = Experiment('sudoku', solver=constraint.NMCSSolver(level=1))
+        #exp = Experiment('sudoku', solver=constraint.BacktrackingSolver())
         exp.launch(None, timeout=300)
 
     if False:
@@ -70,6 +72,18 @@ if __name__ == '__main__':
         
         solved_3 = sudoku.solve(puzzle, model = 'CP', solver=constraint.NMCSSolver(level=2))
         print(solved_3)
+        
+    if True:
+        filename = '4_3'
+        #filename = '3_3'
+        puzzle = parser.parse_sudoku(filename)
+        #puzzle_solved_backtrack = csp_problems.solve(puzzle, solver=constraint.BacktrackingSolver())
+        start_time = time.time()
+        puzzle_solved_nmcs = csp_problems.solve(puzzle, solver=constraint.NMCSSolver(level=1))
+        end_time = time.time()
+        #print(puzzle_solved_backtrack)
+        print(end_time-start_time)
+        print(puzzle_solved_nmcs)
     
     if False:
         nqueens = csp_problems.NQueens(8)
@@ -79,7 +93,7 @@ if __name__ == '__main__':
         print(nq_solved_nmcs)
     
     if False:
-        nqueens = csp_problems.NQueens_2(16)
+        nqueens = csp_problems.NQueens_2(96)
         nq_solved_backtrack = csp_problems.solve(nqueens, solver=constraint.BacktrackingSolver(), logfile=None)
         nq_solved_nmcs = csp_problems.solve(nqueens, solver=constraint.NMCSSolver(level=1), logfile=None)
         print(nq_solved_backtrack)

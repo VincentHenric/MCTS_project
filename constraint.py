@@ -505,7 +505,7 @@ class NMCSSolver(Solver):
             value_index = np.random.randint(len(values))
             assignments[variable] = values.pop(value_index)
             
-            logging.debug('playout assign-{}-{}'.format(variable, assignments[variable]))
+            #logging.debug('playout assign-{}-{}'.format(variable, assignments[variable]))
 
             for constraint, variables in vconstraints[variable]:
                 if not constraint(variables, domains, assignments, True):
@@ -524,6 +524,10 @@ class NMCSSolver(Solver):
     
     def nmcs(self, assignments, domains, constraints, vconstraints, level):
         logging.debug('nmcs call-{}'.format(assignments))
+        
+        # treat variables with one choice
+        assignments = self.forward_search(assignments, domains, constraints, vconstraints)
+        
         if level == 0:
             return self.playout(assignments, domains, constraints, vconstraints)
         
@@ -556,14 +560,30 @@ class NMCSSolver(Solver):
                             best_variable = variable
                             best_value = value
             assignments[best_variable] = best_value
+            # update domain
+            if not self.constraints_are_valid(best_variable, assignments, domains, vconstraints):
+                continue
         return assignments
+    
+    def forward_search(self, assignments, domains, constraints, vconstraints):
+        constr_var = [var for (var, dom) in domains.items() if len(dom)==1 and var not in assignments]
+        while constr_var!=[] and not self.terminal(assignments, domains):
+            for variable in constr_var:
+                value = domains[variable][0]
+                assignments[variable] = value
+                
+                # check if assignment is ok
+                if not self.constraints_are_valid(variable, assignments, domains, vconstraints):
+                    del assignments[variable]
+                    return assignments
+
+            constr_var = [var for (var, dom) in domains.items() if len(dom)==1 and var not in assignments]
+
+        return assignments
+                
         
-        
-    def getSolutionIter(self, domains, constraints, vconstraints):        
-        assignments = self.nmcs({}, domains, constraints, vconstraints, self.level)
-        yield assignments
-            
-            
+    def getSolutionIter(self, domains, constraints, vconstraints):     
+        raise Exception("Not implemented")                      
 
     def _getSolutionIter(self, domains, constraints, vconstraints):
         forwardcheck = self._forwardcheck
@@ -644,14 +664,16 @@ class NMCSSolver(Solver):
         raise RuntimeError("Can't happen")
 
     def getSolution(self, domains, constraints, vconstraints):
-        iter = self.getSolutionIter(domains, constraints, vconstraints)
-        try:
-            return next(iter)
-        except StopIteration:
-            return None
+        return self.nmcs({}, domains, constraints, vconstraints, self.level)
+#        iter = self.getSolutionIter(domains, constraints, vconstraints)
+#        try:
+#            return next(iter)
+#        except StopIteration:
+#            return None
 
     def getSolutions(self, domains, constraints, vconstraints):
-        return list(self.getSolutionIter(domains, constraints, vconstraints))
+        raise Exception("Not implemented")         
+        #return list(self.getSolutionIter(domains, constraints, vconstraints))
 
 
 
