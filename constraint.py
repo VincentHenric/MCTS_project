@@ -466,7 +466,7 @@ class NMCSSolver(Solver):
     True
     """
 
-    def __init__(self, level, heuristics=False, forwardcheck=True, filename='logs/nmcs.log'):
+    def __init__(self, level, heuristics=False, forwardcheck=True, logfile=''):
         """
         @param forwardcheck: If false forward checking will not be requested
                              to constraints while looking for solutions
@@ -477,7 +477,11 @@ class NMCSSolver(Solver):
         self._forwardcheck = forwardcheck
         self.level = level
         self.heuristics = heuristics
-        logging.basicConfig(filename=filename, level=logging.DEBUG)
+        self.radical_logfile = 'logs/{}_{}.log'
+        self.logfile = self.radical_logfile.format(self.name, logfile)
+        
+    def change_logfile(self, logfile):
+        self.logfile = self.radical_logfile.format(self.name, logfile)
         
     def terminal(self, assignments, domains):
         # no choice remain
@@ -585,85 +589,8 @@ class NMCSSolver(Solver):
     def getSolutionIter(self, domains, constraints, vconstraints):     
         raise Exception("Not implemented")                      
 
-    def _getSolutionIter(self, domains, constraints, vconstraints):
-        forwardcheck = self._forwardcheck
-        assignments = {}
-
-        queue = []
-
-        while True:
-
-            # Mix the Degree and Minimum Remaing Values (MRV) heuristics
-            lst = [
-                (-len(vconstraints[variable]), len(domains[variable]), variable)
-                for variable in domains
-            ]
-            lst.sort()
-            for item in lst:
-                if item[-1] not in assignments:
-                    # Found unassigned variable
-                    variable = item[-1]
-                    values = domains[variable][:]
-                    if forwardcheck:
-                        pushdomains = [
-                            domains[x]
-                            for x in domains
-                            if x not in assignments and x != variable
-                        ]
-                    else:
-                        pushdomains = None
-                    break
-            else:
-                # No unassigned variables. We've got a solution. Go back
-                # to last variable, if there's one.
-                yield assignments.copy()
-                if not queue:
-                    return
-                variable, values, pushdomains = queue.pop()
-                if pushdomains:
-                    for domain in pushdomains:
-                        domain.popState()
-
-            while True:
-                # We have a variable. Do we have any values left?
-                if not values:
-                    # No. Go back to last variable, if there's one.
-                    del assignments[variable]
-                    while queue:
-                        variable, values, pushdomains = queue.pop()
-                        if pushdomains:
-                            for domain in pushdomains:
-                                domain.popState()
-                        if values:
-                            break
-                        del assignments[variable]
-                    else:
-                        return
-
-                # Got a value. Check it.
-                assignments[variable] = values.pop()
-
-                if pushdomains:
-                    for domain in pushdomains:
-                        domain.pushState()
-
-                for constraint, variables in vconstraints[variable]:
-                    if not constraint(variables, domains, assignments, pushdomains):
-                        # Value is not good.
-                        break
-                else:
-                    break
-
-                if pushdomains:
-                    for domain in pushdomains:
-                        domain.popState()
-
-            # Push state before looking for next variable.
-            queue.append((variable, values, pushdomains))
-
-        raise RuntimeError("Can't happen")
-
     def getSolution(self, domains, constraints, vconstraints):
+        logging.basicConfig(filename=self.logfile, level=logging.DEBUG)
         return self.nmcs({}, domains, constraints, vconstraints, self.level)
 #        iter = self.getSolutionIter(domains, constraints, vconstraints)
 #        try:
@@ -674,7 +601,6 @@ class NMCSSolver(Solver):
     def getSolutions(self, domains, constraints, vconstraints):
         raise Exception("Not implemented")         
         #return list(self.getSolutionIter(domains, constraints, vconstraints))
-
 
 
 
@@ -709,7 +635,7 @@ class BacktrackingSolver(Solver):
     True
     """
 
-    def __init__(self, forwardcheck=True):
+    def __init__(self, forwardcheck=True, logfile=''):
         """
         @param forwardcheck: If false forward checking will not be requested
                              to constraints while looking for solutions
@@ -718,6 +644,11 @@ class BacktrackingSolver(Solver):
         """
         self.name='backtracking'
         self._forwardcheck = forwardcheck
+        self.radical_logfile = 'logs/backtracking_{}.log'
+        self.logfile = self.radical_logfile.format(logfile)
+        
+    def change_logfile(self, logfile):
+        self.logfile = self.radical_logfile.format(logfile)
 
     def getSolutionIter(self, domains, constraints, vconstraints):
         forwardcheck = self._forwardcheck
@@ -1316,6 +1247,50 @@ class AllEqualConstraint(Constraint):
                             domain.hideValue(value)
         return True
 
+class DualConstraint(Constraint):
+    
+    def __init__(self, nb_primal):
+        self._nb_primal = nb_primal
+        
+    def __call__(self, variables, domains, assignments, forwardcheck=False, _unassigned=Unassigned):
+        primals = variables[:self._nb_primal]
+        duals = variables[self._nb_primal:]
+        seen_dual = {}
+        
+        for primal in primals:
+            primal_value = assignments.get(primal, _unassigned)
+            if primal_value is not _unassigned:
+                dual = duals[primal_value-1]
+                dual_value = assignments.get(dual, _unassigned)
+                if dual_value is not _unassigned:
+                    seen_dual[dual] = True
+                    if dual_value!=primal:
+                        return False
+                else:
+                    if forwardcheck:
+                        domain = domains[dual]
+                        dom = domain[:]
+                        for val in dom:
+                            if val!=primal:
+                                domain.hideValue(val)
+                    
+        for dual in duals:
+            if dual not in seen_dual:
+                dual_value = assignments.get(dual, _unassigned)
+                if dual_value is not _unassigned:
+                    primal = primals[dual_value-1]
+                    primal_value = assignments.get(primal, _unassigned)
+                    if primal_value is not _unassigned:
+                        if primal_value!=dual:
+                            return False
+                    else:
+                        if forwardcheck:
+                            domain = domains[primal]
+                            dom = domain[:]
+                            for val in dom:
+                                if val!=dual:
+                                    domain.hideValue(val)
+        return True
 
 class MaxSumConstraint(Constraint):
     """
