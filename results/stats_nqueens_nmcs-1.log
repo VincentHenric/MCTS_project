@@ -1,0 +1,8 @@
+{'filename': 'nqueens_128', 'time': 16.0077, 'solver': 'nmcs-1', 'solved': True}
+{'filename': 'nqueens_192', 'time': 20.06957, 'solver': 'nmcs-1', 'solved': True}
+{'filename': 'nqueens_32', 'time': 0.58745, 'solver': 'nmcs-1', 'solved': True}
+{'filename': 'nqueens_64', 'time': 0.21352, 'solver': 'nmcs-1', 'solved': True}
+{'filename': 'nqueens_256', 'time': 12.99834, 'solver': 'nmcs-1', 'solved': True}
+{'filename': 'nqueens_16', 'time': 0.02396, 'solver': 'nmcs-1', 'solved': True}
+{'filename': 'nqueens_96', 'time': 7.59653, 'solver': 'nmcs-1', 'solved': True}
+{'filename': 'nqueens_8', 'time': 0.01018, 'solver': 'nmcs-1', 'solved': True}
