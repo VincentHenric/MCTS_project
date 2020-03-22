@@ -97,6 +97,12 @@ if __name__ == '__main__':
         print(nq_solved_nmcs)
         
     if True:
+        nqueens = csp_problems.NQueens_2(16)
+        solver = constraint.NRPA(level=1, playouts=100)
+        nq_solved_nrpa = csp_problems.solve(nqueens, solver=solver)
+        print(nq_solved_nrpa)
+        
+    if False:
         nqueens = csp_problems.NQueens_3(4)
         nq_solved_backtracks = csp_problems.solve_all(nqueens, solver=constraint.BacktrackingSolver(), symmetry_break=True)
         for k in range(min(len(nq_solved_backtracks),20)):

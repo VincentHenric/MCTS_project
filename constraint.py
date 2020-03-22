@@ -40,9 +40,11 @@ from __future__ import absolute_import, division, print_function
 import random
 import copy
 import numpy as np
+from collections import defaultdict
 
 import logging
 import sys
+import math
 
 #from .compat import xrange
 
@@ -603,6 +605,171 @@ class NMCSSolver(Solver):
         #return list(self.getSolutionIter(domains, constraints, vconstraints))
 
 
+class NRPA(Solver):
+    def __init__(self, playouts, level, alpha=1, forwardcheck=True, logfile=''):
+        self.playouts = playouts
+        self.level = level
+        self.alpha = alpha
+        self.name='nrpa-{}'.format(playouts)
+        self._forwardcheck = forwardcheck
+        self.radical_logfile = 'logs/{}_{}.log'
+        self.logfile = self.radical_logfile.format(self.name, logfile)
+        
+    def change_logfile(self, logfile):
+        self.logfile = self.radical_logfile.format(self.name, logfile)
+        
+    def terminal(self, assignments, domains):
+        # no choice remain
+        return any(len(domain)==0 for domain in domains.values()) or len(assignments) == len(domains)
+    
+    def evaluation(self, assignments, domains):
+        return len(assignments)
+    
+    def is_found(self, assignments, domains):
+        return len(assignments) == len(domains)
+    
+    def get_score(self, assignments, domains):
+        return len(assignments)#/len(domains)
+    
+    def is_valid_value(self, variable, value, assignments, domains, constraints, vconstraints):
+        new_domains = copy.deepcopy(domains)
+        assignments[variable] = value
+        for constraint, variables in vconstraints[variable]:
+            if not constraint(variables, new_domains, assignments, True):
+                del assignments[variable]
+                return False
+        del assignments[variable]
+        return True
+    
+#    def get_possible_assignments2(self, assignments, domains, constraints, vconstraints):
+#        possible_assignments = []
+#        (for variable in domains if variable not in assignments):
+#            values = domains[variable][:]
+#            if self.is_valid_value(variable, value, assignments, domains, constraints, vconstraints):
+#                possible_assignments.append((variable, value))
+#        return possible_assignments
+    
+    def get_possible_assignments(self, assignments, domains):
+        possible_assignments = [(variable, value)
+                                for (variable, values) in domains.items() 
+                                if variable not in assignments 
+                                for value in values]
+        return possible_assignments
+        
+    def sample(self, possible_assignments, probas):
+        i = np.random.choice(range(len(possible_assignments)), p=probas)
+        return possible_assignments[i]
+    
+    def playout(self, assignments, domains, constraints, vconstraints, weight):
+        logging.debug('playout')
+        moves = []
+        while not self.terminal(assignments, domains):
+            z = 0
+            possible_assignments = self.get_possible_assignments(assignments, domains)
+            for assignment in possible_assignments:
+                z = z + math.exp(weight[assignment])
+            probas = [math.exp(weight[assignment])/z for assignment in possible_assignments]
+            variable, value = self.sample(possible_assignments, probas)
+            
+            assignments[variable] = value
+            for constraint, variables in vconstraints[variable]:
+                if not constraint(variables, domains, assignments, True):
+                    # Value is not good. Remove it from assignment and return
+                    del assignments[variable]
+                    score = self.get_score(assignments, domains)
+                    logging.debug('end playout negative-{}'.format(assignments))
+                    return score, moves
+            moves.append((variable, value))
+                    
+        logging.debug('end playout positive-{}'.format(assignments))
+        score = self.get_score(assignments, domains)
+        return score, moves
+    
+    def constraints_are_valid(self, variable, assignments, domains, vconstraints):
+        for constraint, variables in vconstraints[variable]:
+            if not constraint(variables, domains, assignments, True):
+                return False
+        return True
+        
+    
+    
+    def nrpa(self, assignments, domains, constraints, vconstraints, weight, level):
+        # treat variables with one choice
+        assignments = self.forward_search(assignments, domains, constraints, vconstraints)
+        
+        if level == 0:
+            return self.playout(assignments, domains, constraints, vconstraints, weight)
+        
+        best_assignments = copy.deepcopy(assignments)
+        #best_variable = None
+        #best_value = None
+        best_score = -np.inf
+        
+        for k in range(self.playouts):
+            try_assignments = assignments.copy()
+            try_domains = copy.deepcopy(domains)
+            score, moves = self.nrpa(try_assignments, try_domains, constraints, vconstraints, weight, level-1)
+            if score > best_score:
+                best_score = score
+                best_moves = moves
+                best_assignments = {**assignments, **dict(moves)}
+            
+                if len(best_assignments)==len(domains):
+                    return best_score, best_moves
+                
+            weight = self.adapt(assignments.copy(), domains, moves, weight)
+            
+        return best_score, best_moves
+    
+    def adapt(self, assignments, domains, moves, weight):
+        new_weight = copy.deepcopy(weight)
+        
+        for move in moves:
+            variable, value = move
+            new_weight[move] += self.alpha
+            z = 0
+            possible_assignments = self.get_possible_assignments(assignments, domains)
+            for m in possible_assignments:
+                z += math.exp(weight[m])
+            for m in possible_assignments:
+                new_weight[m] -= self.alpha * math.exp(weight[m])/z
+            assignments[variable] = value
+        weight = new_weight
+        self.weight = weight
+        return weight
+    
+    def forward_search(self, assignments, domains, constraints, vconstraints):
+        constr_var = [var for (var, dom) in domains.items() if len(dom)==1 and var not in assignments]
+        while constr_var!=[] and not self.terminal(assignments, domains):
+            for variable in constr_var:
+                value = domains[variable][0]
+                assignments[variable] = value
+                
+                # check if assignment is ok
+                if not self.constraints_are_valid(variable, assignments, domains, vconstraints):
+                    del assignments[variable]
+                    return assignments
+
+            constr_var = [var for (var, dom) in domains.items() if len(dom)==1 and var not in assignments]
+
+        return assignments
+        
+    def getSolutionIter(self, domains, constraints, vconstraints):     
+        raise Exception("Not implemented")                      
+
+    def getSolution(self, domains, constraints, vconstraints):
+        logging.basicConfig(filename=self.logfile, level=logging.DEBUG)
+        score, moves = self.nrpa({}, domains, constraints, vconstraints, defaultdict(int), self.level)
+        return dict(moves)
+#        iter = self.getSolutionIter(domains, constraints, vconstraints)
+#        try:
+#            return next(iter)
+#        except StopIteration:
+#            return None
+
+    def getSolutions(self, domains, constraints, vconstraints):
+        raise Exception("Not implemented")         
+        #return list(self.getSolutionIter(domains, constraints, vconstraints))
 
 class BacktrackingSolver(Solver):
     """
