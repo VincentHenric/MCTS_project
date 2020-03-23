@@ -16,6 +16,7 @@ import copy
 import string
 import itertools
 import functools
+from collections import defaultdict
 
 class TimeoutException(Exception):
     def __init__(self, *args, **kwargs):
@@ -313,9 +314,9 @@ class NQueens_2(Problems):
         self.add_diag_left_constraints(p)
         self.add_diag_right_constraints(p)
         if symmetry_break:
-            #self.add_axes_sym_constraints(p)
-            #self.add_rotation_sym_constraints(p)
-            self.sym_constraints(p)
+            self.add_axes_sym_constraints(p)
+            self.add_rotation_sym_constraints(p)
+            #self.sym_constraints(p)
         return p
     
     def dict_to_string(self, padding = 0, rowend = "", row_sep = "", box_sep = "", col_sep = "", last_row_hack = ""):
@@ -578,6 +579,13 @@ class Graph_coloring(Problems):
     
         def get_fixed(self):
             return self.fixed
+        
+        def get_degrees(self):
+            degrees = defaultdict(int)
+            for n1,n2 in self.edges:
+                degrees[n1] += 1
+                degrees[n2] += 1
+            return degrees
         
         def create_csp_problem(self, solver=constraint.BacktrackingSolver(), symmetry_break=False):
             p = constraint.Problem(solver)

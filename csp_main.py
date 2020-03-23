@@ -32,6 +32,8 @@ class Experiment:
             file.write(msg + '\n')
         
     def launch(self, filenames=None, timeout=300, symmetry_break=False):
+        if symmetry_break:
+            self.output_file = 'stats_{}-{}_{}.log'.format(self.class_of_problems, 'sym', self.solver.name)
         if not filenames:
             filenames = os.listdir(self.path)
         for filename in filenames:
@@ -56,10 +58,11 @@ class Experiment:
                 
                 
 if __name__ == '__main__':  
-    if False:
-        #exp = Experiment('nqueens', solver=constraint.NMCSSolver(level=1))
-        exp = Experiment('nqueens', solver=constraint.BacktrackingSolver())
-        exp.launch(None, timeout=300, symmetry_break=True)
+    if True:
+        exp = Experiment('sudoku', solver=constraint.NMCSSolver(level=1))
+        #exp = Experiment('nqueens', solver=constraint.BacktrackingSolver())
+        #exp = Experiment('nqueens', solver = constraint.NRPA(level=1, playouts=100, iterative=True, heuristics=True))
+        exp.launch(['3_4', '4_2', '4_3', '4_7'], timeout=300, symmetry_break=False)
 
     if False:
         fixed = {8: 2, 9: 1, 16: 9, 17: 8, 18: 7, 15: 1, 19: 3, 20: 2, 22: 9, 25: 6, 28: 8, 29: 7, 34: 2, 50: 7, 43: 7, 38: 3, 37: 2, 42: 8, 46: 4, 47: 1, 58: 8, 65: 6, 73: 1, 66: 8, 69: 3, 76: 7, 81: 8}
@@ -78,15 +81,15 @@ if __name__ == '__main__':
         print(solved_3)
         
     if False:
-        filename = '4_4'
+        filename = '3_4'
         #filename = '3_3'
         puzzle = parser.parse_sudoku(filename)
         #puzzle_solved_backtrack = csp_problems.solve(puzzle, solver=constraint.BacktrackingSolver())
-        start_time = time.time()
+        #start_time = time.time()
         puzzle_solved_nmcs = csp_problems.solve(puzzle, solver=constraint.NMCSSolver(level=1))
-        end_time = time.time()
+        #end_time = time.time()
         #print(puzzle_solved_backtrack)
-        print(end_time-start_time)
+        #print(end_time-start_time)
         print(puzzle_solved_nmcs)
     
     if False:
@@ -96,11 +99,27 @@ if __name__ == '__main__':
         print(nq_solved_backtrack)
         print(nq_solved_nmcs)
         
-    if True:
-        nqueens = csp_problems.NQueens_2(16)
-        solver = constraint.NRPA(level=1, playouts=100)
+    if False:
+        nqueens = csp_problems.NQueens_2(8)
+        solver = constraint.NRPA(level=1, playouts=100, iterative=False, heuristics=True)
         nq_solved_nrpa = csp_problems.solve(nqueens, solver=solver)
         print(nq_solved_nrpa)
+        
+    if False:
+        filename = 'gc_50_3_6'
+        graph = parser.parse_coloring(filename)
+        solver=constraint.NRPA(level=2, playouts=100)
+        graph_solved_nrpa= csp_problems.solve(graph, solver=solver)
+        print(graph_solved_nrpa)
+        
+    if False:
+        filename = '4_2'
+        graph = parser.parse_sudoku(filename)
+        solver=constraint.NRPA(level=1, playouts=100, iterative=False, heuristics=False)
+        #solver=constraint.NMCSSolver(level=1)
+        graph_solved_nrpa= csp_problems.solve(graph, solver=solver)
+        print(graph_solved_nrpa) 
+        
         
     if False:
         nqueens = csp_problems.NQueens_3(4)

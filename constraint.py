@@ -519,7 +519,10 @@ class NMCSSolver(Solver):
                     del assignments[variable]
                     logging.debug('end playout negative-{}'.format(assignments))
                     return assignments
-        logging.debug('end playout positive-{}'.format(assignments))
+        if self.is_found(assignments, domains):
+            logging.debug('end playout positive-{}'.format(assignments))
+        else:
+            logging.debug('end playout negative-{}'.format(assignments))
         return assignments
     
     def constraints_are_valid(self, variable, assignments, domains, vconstraints):
@@ -606,11 +609,17 @@ class NMCSSolver(Solver):
 
 
 class NRPA(Solver):
-    def __init__(self, playouts, level, alpha=1, forwardcheck=True, logfile=''):
+    def __init__(self, playouts, level, alpha=1, iterative=False, heuristics=False, forwardcheck=True, logfile=''):
         self.playouts = playouts
         self.level = level
         self.alpha = alpha
-        self.name='nrpa-{}'.format(playouts)
+        self.iterative = iterative
+        self.heuristics = heuristics
+        self.playout_func = self.playout
+        self.name='nrpa-{}-{}'.format(level, playouts)
+        if self.heuristics:
+            self.playout_func = self.playout_heuristics
+            self.name='nrpa-{}-{}-{}'.format(level, playouts, 'heur')
         self._forwardcheck = forwardcheck
         self.radical_logfile = 'logs/{}_{}.log'
         self.logfile = self.radical_logfile.format(self.name, logfile)
@@ -678,12 +687,57 @@ class NRPA(Solver):
                     del assignments[variable]
                     score = self.get_score(assignments, domains)
                     logging.debug('end playout negative-{}'.format(assignments))
-                    return score, moves
+                    return score, moves, weight
             moves.append((variable, value))
                     
         logging.debug('end playout positive-{}'.format(assignments))
         score = self.get_score(assignments, domains)
-        return score, moves
+        return score, moves, weight
+    
+    def playout_heuristics(self, assignments, domains, constraints, vconstraints, weight):
+        logging.debug('playout')
+        moves = []
+        while not self.terminal(assignments, domains):
+            #z = 0
+            #possible_assignments = self.get_possible_assignments(assignments, domains)
+            
+#            lst = [
+#                (-len(vconstraints[variable]), len(domains[variable]), variable)
+#                for variable in domains if variable not in assignments
+#            ]
+#            lst.sort()
+#            
+#            variable = lst[0][-1]
+            
+            variables = [var for var in domains if var not in assignments]
+            scores = [-len(domains[var]) for var in variables]
+            indices = [i for i in range(len(scores)) if scores[i]==-1]
+            if indices!=[]:
+                variables = [variables[i] for i in indices]
+                scores = [-1 for i in indices]
+                
+            z = sum(math.exp(score) for score in scores)
+            probas = [math.exp(score)/z for score in scores]
+            variable = self.sample(variables, probas)
+            
+            values = domains[variable]
+            z = sum(math.exp(weight[(variable, value)]) for value in values)
+            probas = [math.exp(weight[(variable, value)])/z for value in values]
+            value = self.sample(values, probas)
+            
+            assignments[variable] = value
+            for constraint, variables in vconstraints[variable]:
+                if not constraint(variables, domains, assignments, True):
+                    # Value is not good. Remove it from assignment and return
+                    del assignments[variable]
+                    score = self.get_score(assignments, domains)
+                    logging.debug('end playout negative-{}'.format(assignments))
+                    return score, moves, weight
+            moves.append((variable, value))
+                    
+        logging.debug('end playout positive-{}'.format(assignments))
+        score = self.get_score(assignments, domains)
+        return score, moves, weight
     
     def constraints_are_valid(self, variable, assignments, domains, vconstraints):
         for constraint, variables in vconstraints[variable]:
@@ -695,10 +749,11 @@ class NRPA(Solver):
     
     def nrpa(self, assignments, domains, constraints, vconstraints, weight, level):
         # treat variables with one choice
-        assignments = self.forward_search(assignments, domains, constraints, vconstraints)
+        assignments, _ = self.forward_search(assignments, domains, constraints, vconstraints)
+        current_moves = list(assignments.items())
         
         if level == 0:
-            return self.playout(assignments, domains, constraints, vconstraints, weight)
+            return self.playout_func(assignments, domains, constraints, vconstraints, weight)
         
         best_assignments = copy.deepcopy(assignments)
         #best_variable = None
@@ -708,18 +763,18 @@ class NRPA(Solver):
         for k in range(self.playouts):
             try_assignments = assignments.copy()
             try_domains = copy.deepcopy(domains)
-            score, moves = self.nrpa(try_assignments, try_domains, constraints, vconstraints, weight, level-1)
+            score, moves, weight = self.nrpa(try_assignments, try_domains, constraints, vconstraints, weight, level-1)
             if score > best_score:
                 best_score = score
                 best_moves = moves
                 best_assignments = {**assignments, **dict(moves)}
             
                 if len(best_assignments)==len(domains):
-                    return best_score, best_moves
+                    return best_score, current_moves+best_moves, weight
                 
-            weight = self.adapt(assignments.copy(), domains, moves, weight)
+            weight = self.adapt(assignments.copy(), copy.deepcopy(domains), best_moves, weight)
             
-        return best_score, best_moves
+        return best_score, current_moves+best_moves, weight
     
     def adapt(self, assignments, domains, moves, weight):
         new_weight = copy.deepcopy(weight)
@@ -740,6 +795,7 @@ class NRPA(Solver):
     
     def forward_search(self, assignments, domains, constraints, vconstraints):
         constr_var = [var for (var, dom) in domains.items() if len(dom)==1 and var not in assignments]
+        moves = []
         while constr_var!=[] and not self.terminal(assignments, domains):
             for variable in constr_var:
                 value = domains[variable][0]
@@ -748,18 +804,29 @@ class NRPA(Solver):
                 # check if assignment is ok
                 if not self.constraints_are_valid(variable, assignments, domains, vconstraints):
                     del assignments[variable]
-                    return assignments
+                    return assignments, moves
+                
+                moves.append((variable, value))
 
             constr_var = [var for (var, dom) in domains.items() if len(dom)==1 and var not in assignments]
 
-        return assignments
+        return assignments, moves
         
+    def iterative_nrpa(self, domains, constraints, vconstraints, weight):
+        while True:
+            score, moves, weight = self.nrpa({}, domains, constraints, vconstraints, weight, self.level)
+            if len(moves) == len(domains):
+                return score, moves, weight
+    
     def getSolutionIter(self, domains, constraints, vconstraints):     
         raise Exception("Not implemented")                      
 
     def getSolution(self, domains, constraints, vconstraints):
         logging.basicConfig(filename=self.logfile, level=logging.DEBUG)
-        score, moves = self.nrpa({}, domains, constraints, vconstraints, defaultdict(int), self.level)
+        if self.iterative:
+            score, moves, weight = self.iterative_nrpa(domains, constraints, vconstraints, defaultdict(int))
+        else:
+            score, moves, weight = self.nrpa({}, domains, constraints, vconstraints, defaultdict(int), self.level)
         return dict(moves)
 #        iter = self.getSolutionIter(domains, constraints, vconstraints)
 #        try:
