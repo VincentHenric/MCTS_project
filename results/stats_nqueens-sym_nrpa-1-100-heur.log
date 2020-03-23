@@ -1,0 +1,8 @@
+{'filename': 'nqueens_128', 'time': 42.79898, 'solver': 'nrpa-1-100-heur', 'solved': True}
+{'filename': 'nqueens_192', 'time': 72.26654, 'solver': 'nrpa-1-100-heur', 'solved': True}
+{'filename': 'nqueens_32', 'time': 24.82673, 'solver': 'nrpa-1-100-heur', 'solved': True}
+{'filename': 'nqueens_64', 'time': 118.31501, 'solver': 'nrpa-1-100-heur', 'solved': True}
+{'filename': 'nqueens_256', 'time': 300.10232, 'solver': 'nrpa-1-100-heur', 'solved': False}
+{'filename': 'nqueens_16', 'time': 2.04975, 'solver': 'nrpa-1-100-heur', 'solved': True}
+{'filename': 'nqueens_96', 'time': 1.73157, 'solver': 'nrpa-1-100-heur', 'solved': True}
+{'filename': 'nqueens_8', 'time': 0.32644, 'solver': 'nrpa-1-100-heur', 'solved': True}
