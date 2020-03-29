@@ -1,6 +1,6 @@
 {'filename': '5_8', 'time': 300.00562, 'solver': 'nmcs-1', 'solved': False}
-{'filename': '4_7', 'time': 122.15053, 'solver': 'nmcs-1', 'solved': True}
-{'filename': '4_2', 'time': 39.85814, 'solver': 'nmcs-1', 'solved': True}
+{'filename': '4_7', 'time': 79.7551, 'solver': 'nmcs-1', 'solved': True}
+{'filename': '4_2', 'time': 122.46953, 'solver': 'nmcs-1', 'solved': True}
 {'filename': '3_7', 'time': 0.00988, 'solver': 'nmcs-1', 'solved': True}
 {'filename': '5_0', 'time': 300.06289, 'solver': 'nmcs-1', 'solved': False}
 {'filename': '5_5', 'time': 300.03194, 'solver': 'nmcs-1', 'solved': False}
@@ -8,7 +8,7 @@
 {'filename': '5_1', 'time': 300.10073, 'solver': 'nmcs-1', 'solved': False}
 {'filename': '3_6', 'time': 0.0101, 'solver': 'nmcs-1', 'solved': True}
 {'filename': '5_9', 'time': 300.04224, 'solver': 'nmcs-1', 'solved': False}
-{'filename': '3_4', 'time': 0.1195, 'solver': 'nmcs-1', 'solved': True}
+{'filename': '3_4', 'time': 0.03416, 'solver': 'nmcs-1', 'solved': True}
 {'filename': '5_2', 'time': 300.09859, 'solver': 'nmcs-1', 'solved': False}
 {'filename': '5_4', 'time': 300.10111, 'solver': 'nmcs-1', 'solved': False}
 {'filename': '3_2', 'time': 0.01316, 'solver': 'nmcs-1', 'solved': True}
@@ -19,7 +19,7 @@
 {'filename': '4_8', 'time': 300.1014, 'solver': 'nmcs-1', 'solved': False}
 {'filename': '5_6', 'time': 300.06243, 'solver': 'nmcs-1', 'solved': False}
 {'filename': '4_4', 'time': 164.88456, 'solver': 'nmcs-1', 'solved': True}
-{'filename': '4_3', 'time': 134.6619, 'solver': 'nmcs-1', 'solved': True}
+{'filename': '4_3', 'time': 300.10007, 'solver': 'nmcs-1', 'solved': False}
 {'filename': '3_0', 'time': 0.01693, 'solver': 'nmcs-1', 'solved': True}
 {'filename': '5_7', 'time': 300.09937, 'solver': 'nmcs-1', 'solved': False}
 {'filename': '3_9', 'time': 0.0262, 'solver': 'nmcs-1', 'solved': True}
