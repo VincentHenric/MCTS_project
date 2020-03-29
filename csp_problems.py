@@ -155,7 +155,7 @@ class Sudoku_problem(Problems):
     def get_fixed(self):
         return self.fixed
 
-class NQueens(Problems):
+class NQueens_naive(Problems):
     def __init__(self, n, fixed={}):
         self.size = n
         self.fixed = fixed
@@ -289,7 +289,7 @@ class NQueens(Problems):
     def n_symbols(self): return 2
     
     
-class NQueens_2(Problems):
+class NQueens_latesymetry(Problems):
     def __init__(self, n, fixed={}):
         self.size = n
         self.fixed = fixed
@@ -317,6 +317,115 @@ class NQueens_2(Problems):
             self.add_axes_sym_constraints(p)
             self.add_rotation_sym_constraints(p)
             #self.sym_constraints(p)
+        return p
+    
+    def dict_to_string(self, padding = 0, rowend = "", row_sep = "", box_sep = "", col_sep = "", last_row_hack = ""):
+        """Returns a puzzle string of dimension 'boxsize' from a dictionary of 
+        'fixed' cells."""
+        if len(self.fixed) == self.n_rows():
+            default_symbol='0'
+        else:
+            default_symbol='.'
+        s = ''
+        s += row_sep
+        for row in range(1, self.size + 1):
+            s += box_sep
+            col_pos = self.fixed.get(row)
+            for col in range(1, self.size + 1):
+                if col == col_pos:
+                    s += "1" + " "*padding
+                else:
+                    s += default_symbol + ' '*padding
+                if col < self.n_cols():
+                   s += col_sep
+            s += rowend               
+            if row == self.n_rows():
+                s += last_row_hack
+        return s
+    
+    def left_constraint(self, i, j):
+        def constraint(yi, yj):
+            return i+yi!=j+yj
+        return constraint
+    
+    def right_constraint(self, i, j):
+        def constraint(yi, yj):
+            return i-yi!=j-yj
+        return constraint
+    
+    def add_axes_sym_constraints(self, problem):
+        problem.addConstraint(constraint.FunctionConstraint(horizontal_symetry(self.n_rows()), self.rows()))
+        problem.addConstraint(constraint.FunctionConstraint(vertical_symetry), self.rows())
+        problem.addConstraint(constraint.FunctionConstraint(diag_symetry(self.n_rows()), self.rows()))
+        problem.addConstraint(constraint.FunctionConstraint(anti_diag_symetry(self.n_rows()), self.rows()))
+        
+    def add_rotation_sym_constraints(self, problem):
+        problem.addConstraint(constraint.FunctionConstraint(rotation_90(self.n_rows()), self.rows()))
+        problem.addConstraint(constraint.FunctionConstraint(rotation_180(self.n_rows()), self.rows()))
+        problem.addConstraint(constraint.FunctionConstraint(rotation_270(self.n_rows()), self.rows()))
+           
+    def sym_constraints(self, problem):
+        problem.addConstraint(constraint.FunctionConstraint(lambda x,y: x-y<0), [self.rows()[i] for i in [0,-1]])
+        problem.addConstraint(constraint.MaxSumConstraint((self.n_cols()+1)/2), [self.rows()[0]])
+        
+    def add_diag_left_constraints(self, problem):
+        """add_box_constraints(problem, boxsize)
+    
+        Adds to constraint problem 'problem', all_different constraints on boxes."""
+        for i,j in itertools.combinations(self.rows(), 2):
+            problem.addConstraint(constraint.FunctionConstraint(self.left_constraint(i,j)), [i, j])
+            
+    def add_diag_right_constraints(self, problem):
+        """add_box_constraints(problem, boxsize)
+    
+        Adds to constraint problem 'problem', all_different constraints on boxes."""
+        for i,j in itertools.combinations(self.rows(), 2):
+            problem.addConstraint(constraint.FunctionConstraint(self.right_constraint(i,j)), [i, j])
+    
+    def rows(self): return range(1, self.n_rows() + 1)
+    def cols(self): return range(1, self.n_cols() + 1)
+    def diags_left(self): return range(2, self.n_diags_left() + 1)
+    def diags_right(self): return range(1-self.n_rows(), -self.n_rows() + self.n_diags_right())
+    def cell(self, row, column): return (row - 1) * self.n_rows() + column
+    def symbols(self): return range(0, 1 + 1)    
+    def cells(self): return range(1, self.n_cells() + 1)
+   
+    def n_rows(self): return self.size
+    def n_cols(self): return self.size
+    def n_diags_left(self): return 2*self.size
+    def n_diags_right(self): return 2*self.size
+    def n_cells(self): return self.n_rows()*self.n_cols()
+    def n_symbols(self): return 2
+    
+    
+class NQueens_earlysymetry(Problems):
+    def __init__(self, n, fixed={}):
+        self.size = n
+        self.fixed = fixed
+        
+    def __repr__(self):
+        return self.dict_to_string(padding = 1, rowend = "\n")
+
+    def __str__(self):
+        return self.__repr__()
+
+    def get_boxsize(self):
+        return self.boxsize
+
+    def get_fixed(self):
+        return self.fixed
+    
+    def create_csp_problem(self, solver=constraint.BacktrackingSolver(), symmetry_break=False):
+        p = constraint.Problem(solver)
+        p.addVariables(self.rows(), self.cols()) 
+        
+        p.addConstraint(constraint.AllDifferentConstraint(), self.rows())
+        self.add_diag_left_constraints(p)
+        self.add_diag_right_constraints(p)
+        if symmetry_break:
+            #self.add_axes_sym_constraints(p)
+            #self.add_rotation_sym_constraints(p)
+            self.sym_constraints(p)
         return p
     
     def dict_to_string(self, padding = 0, rowend = "", row_sep = "", box_sep = "", col_sep = "", last_row_hack = ""):

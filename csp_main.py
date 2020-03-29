@@ -59,10 +59,29 @@ class Experiment:
                 
 if __name__ == '__main__':  
     if True:
+        # Launch all experiments
+        
+        solvers = [constraint.BacktrackingSolver(),
+                   constraint.NMCSSolver(level=1),
+                   constraint.NMCSSolver(level=2),
+                   constraint.NRPA(level=1, playouts=100, iterative=True, heuristics=True)]
+        problems = [('sudoku',False),
+                    ('nqueens-early', False),
+                    ('nqueens-early', True),
+                    ('nqueens-late', True),
+                    ('coloring', False)
+                    ]
+        for solver in solvers:
+            for pb, symmetric_break in problems:
+                exp = Experiment(pb, solver=solver)
+                exp.launch(None, timeout=300, symmetry_break=symmetric_break)
+        
+    if False:
         exp = Experiment('sudoku', solver=constraint.NMCSSolver(level=1))
+        
         #exp = Experiment('nqueens', solver=constraint.BacktrackingSolver())
         #exp = Experiment('nqueens', solver = constraint.NRPA(level=1, playouts=100, iterative=True, heuristics=True))
-        exp.launch(['3_4', '4_2', '4_3', '4_7'], timeout=300, symmetry_break=False)
+        exp.launch(None, timeout=300, symmetry_break=False)
 
     if False:
         fixed = {8: 2, 9: 1, 16: 9, 17: 8, 18: 7, 15: 1, 19: 3, 20: 2, 22: 9, 25: 6, 28: 8, 29: 7, 34: 2, 50: 7, 43: 7, 38: 3, 37: 2, 42: 8, 46: 4, 47: 1, 58: 8, 65: 6, 73: 1, 66: 8, 69: 3, 76: 7, 81: 8}

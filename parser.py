@@ -48,7 +48,7 @@ def parse_sudoku(filename):
     
     return csp_problems.Sudoku_problem(fixed, boxsize)
 
-def parse_nqueens(filename):
+def parse_nqueens_(filename):
     def get_data(filename):
         with open('data/nqueens/data/{}'.format(filename), 'r') as input_data_file:
             input_data = input_data_file.read()
@@ -63,10 +63,34 @@ def parse_nqueens(filename):
     
     return csp_problems.NQueens_2(n)
 
+def parse_nqueens(kind='early'):
+    def parse(filename):
+        def get_data(filename):
+            with open('data/nqueens/data/{}'.format(filename), 'r') as input_data_file:
+                input_data = input_data_file.read()
+                    
+            lines = input_data.split('\n')
+        
+            n = int(lines[0])
+        
+            return n
+        
+        n = get_data(filename)
+        if kind=='early':
+            return csp_problems.NQueens_earlysymetry(n)
+        if kind=='late':
+            return csp_problems.NQueens_latesymetry(n)
+        else:
+            raise ValueError('kind not found')
+    
+    return parse
+
 PARSE = {
         'coloring': parse_coloring,
         'sudoku': parse_sudoku,
-        'nqueens': parse_nqueens
+        'nqueens': parse_nqueens('early'),
+        'nqueens-early': parse_nqueens('early'),
+        'nqueens-late': parse_nqueens('late')
         }
 
 if __name__ == '__main__':
