@@ -21,7 +21,7 @@ The project make use of several Python libraries, they are all standard librarie
 - `constraint.py`: implementation of the CSP framework, and the solvers. Extended work from the work of WillDHB  and  scls19fr (https://github.com/python-constraint/python-constraint)
 - `csp_problems.py`: implementation of the classes for the different CSP problems, in particular N-queens, graph-coloring, and sudoku
 - `csp_main.py`: the main file used to launch the simulations. Tu run all the simulations, simply launch it
-- `find_solutions.py`: utility file used to get the optimal number of colors for graph coloring. Used only for pre-processing, in conjunction with files from kouei (https://github.com/kouei/discrete-optimization/tree/master/coloring)
+- `find_solutions.py`: utility file used to get the optimal number of colors for graph coloring. Used only for pre-processing, in conjunction with files from kouei (https://github.com/kouei/discrete-optimization/tree/master/coloring). To use it, the folder from kouei entitled coloring, should be placed in a folder names `solutions`.
 - `generator.py`: utility file to create sudoku problems (and nqueens file with the appropriate format to be parsed)
 - `parser.py`: utility file to parse problem files, and create the corresponding CSP
 - `sudoku.py`: extra utility file for sudoku problems. Based on MHenderson work (https://gist.github.com/MHenderson/7639387)
